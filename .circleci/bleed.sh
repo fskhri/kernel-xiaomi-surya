@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 echo "Cloning dependencies"
-git clone --depth=1 https://github.com/stormbreaker-project/kernel_xiaomi_surya -b  alpha  kernel
+git clone --depth=1 https://github.com/fskhri/kernel-xiaomi-surya -b  sbv6  kernel
 cd kernel
 git clone --depth=1 https://github.com/mvaisakh/gcc-arm64 -b lld-integration gcc64
 git clone --depth=1 https://github.com/mvaisakh/gcc-arm -b lld-integration gcc32
-git clone --depth=1 https://github.com/stormbreaker-project/AnyKernel3 -b surya AnyKernel
+git clone --depth=1 https://github.com/fskhri/AnyKernel3 -b ribka AnyKernel
 git clone --depth=1 https://android.googlesource.com/platform/system/libufdt libufdt
 echo "Done"
 IMAGE=$(pwd)/out/arch/arm64/boot/Image.gz-dtb
@@ -17,8 +17,8 @@ GCC64_DIR="${PWD}/gcc64"
 GCC32_DIR="${PWD}/gcc32"
 PATH="$TC_DIR/bin/:$GCC64_DIR/bin/:$GCC32_DIR/bin/:/usr/bin:$PATH"
 export ARCH=arm64
-export KBUILD_BUILD_HOST="Drone-CI"
-export KBUILD_BUILD_USER="forenche"
+export KBUILD_BUILD_HOST="LuLu"
+export KBUILD_BUILD_USER="Ribka"
 # sticker plox
 function sticker() {
     curl -s -X POST "https://api.telegram.org/bot$BOTTOKEN/sendSticker" \
