@@ -13,7 +13,7 @@ jobs:
            git clone https://github.com/akhilnarang/scripts && cd scripts && bash setup/android_build_env.sh && cd ..
            mkdir kernul
            cd kernul
-           wget https://raw.githubusercontent.com/fskhri/kernel-xiaomi-surya/sbv6/.circleci/bleed.sh
+           wget https://raw.githubusercontent.com/fskhri/kernel-xiaomi-surya/sbv6/.circleci/build.sh
            source build.sh
 workflows:
   version: 2.1
