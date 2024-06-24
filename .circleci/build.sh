@@ -1,94 +1,106 @@
-#!/usr/bin/env bash
+git clone --depth=1 https://github.com/mvaisakh/gcc-arm64.git -b gcc-master gcc64
+git clone --depth=1 https://github.com/mvaisakh/gcc-arm.git -b gcc-master gcc32
+git clone --depth=1 https://github.com/fskhri/AnyKernel3.git -b ribka
 
-echo "Cloning dependencies"
-git clone --depth=1 https://github.com/fskhri/kernel-xiaomi-surya -b sbv6 kernel
-cd kernel
-git clone --depth=1 https://github.com/llvm/llvm-project llvm
-git clone --depth=1 https://github.com/fskhri/AnyKernel3 -b ribka AnyKernel
-git clone --depth=1 https://android.googlesource.com/platform/system/libufdt libufdt
-echo "Done"
-
-IMAGE=$(pwd)/out/arch/arm64/boot/Image.gz-dtb
-TANGGAL=$(date +"%F-%S")
-LOG=$(echo *.log)
+export TZ=Asia/Jakarta 
+IMAGE=$(pwd)/out/arch/arm64/boot/Image.gz
+DTBO=$(pwd)/out/arch/arm64/boot/dtbo.img
+TANGGAL=${VERSION}-$(date +"%d%m%H%M")
 START=$(date +"%s")
-
-export CONFIG_PATH=$PWD/arch/arm64/configs/surya-perf_defconfig
-TC_DIR=${PWD}
-LLVM_DIR="${PWD}/llvm"
-PATH="${LLVM_DIR}/bin:/usr/bin:$PATH"
-
+BRANCH=$(git rev-parse --abbrev-ref HEAD)
+export VERSION=X9-BETA
 export ARCH=arm64
+export SUBARCH=arm64
 export KBUILD_BUILD_HOST="LuLu"
 export KBUILD_BUILD_USER="Ribka"
-export CLANG_TRIPLE=aarch64-linux-gnu-
+export chat_id="-1057444072"
+export DEF="surya_defconfig"
+TC_DIR=${PWD}
+GCC64_DIR="${PWD}/gcc64"
+GCC32_DIR="${PWD}/gcc32"
+export PATH="$TC_DIR/bin/:$GCC64_DIR/bin/:$GCC32_DIR/bin/:/usr/bin:$PATH"
+BUILD_DTBO=1
+SIGN_BUILD=0
 
-# sticker plox
-function sticker() {
-    curl -s -X POST "https://api.telegram.org/bot$BOTTOKEN/sendSticker" \
-        -d sticker="CAADBQADVAADaEQ4KS3kDsr-OWAUFgQ" \
-        -d chat_id=$CHATID
-}
+echo "CONFIG_PATCH_INITRAMFS=y" >> arch/arm64/configs/surya_defconfig
 
-# Send info plox channel
-function sendinfo() {
-    curl -s -X POST "https://api.telegram.org/bot$BOTTOKEN/sendMessage" \
-        -d chat_id="$CHATID" \
-        -d "disable_web_page_preview=true" \
-        -d "parse_mode=html" \
-        -d text="<b>• surya-Stormbreaker Kernel •</b>%0ABuild started on <code>Circle CI</code>%0AFor device <b>Poco X3</b> (picasso)%0Abranch <code>$(git rev-parse --abbrev-ref HEAD)</code>(master)%0AUnder commit <code>$(git log --pretty=format:'"%h : %s"' -1)</code>%0AUsing compiler: <code>Clang</code>%0AStarted on <code>$(date)</code>%0A<b>Build Status:</b> #AOSP-Alpha"
-}
+curl -s -X POST https://api.telegram.org/bot${TOKEN}/sendMessage -d text="Buckle up bois ${BRANCH} build has started" -d chat_id=${chat_id} -d parse_mode=HTML
 
-# Push kernel to channel
-function push() {
-    cd AnyKernel
-    ZIP=$(echo *.zip)
-    curl -F document=@$ZIP "https://api.telegram.org/bot$BOTTOKEN/sendDocument" \
-        -F chat_id="$CHATID" \
-        -F "disable_web_page_preview=true" \
-        -F "parse_mode=html" \
-        -F caption="Build took $(($DIFF / 60)) minute(s) and $(($DIFF % 60)) second(s). | For <b>Poco X3 (surya)</b> | <b>Eva Clang</b>"
-}
+   make O=out ARCH=arm64 $DEF
+       make -j$(nproc --all) O=out \
+				ARCH=arm64 \
+				CROSS_COMPILE_ARM32=arm-eabi- \
+				CROSS_COMPILE=aarch64-elf- \
+				AR=llvm-ar \
+				NM=llvm-nm \
+				OBJCOPY=llvm-objcopy \
+				LD=aarch64-elf-ld.lld 2>&1 | tee build.log
 
-# Fin Error
-function finerr() {
-    curl -F document=@$LOG "https://api.telegram.org/bot$BOTTOKEN/sendDocument" \
-        -F chat_id="$CHATID" \
-        -F "disable_web_page_preview=true" \
-        -F "parse_mode=html" \
-        -F caption="Build logs"
-}
-
-# Compile plox
-function compile() {
-    make O=out ARCH=arm64 surya-perf_defconfig
-    make -j$(nproc --all) O=out \
-                          ARCH=arm64 \
-                          CC=clang \
-                          CLANG_TRIPLE=aarch64-linux-gnu- \
-                          CROSS_COMPILE=aarch64-linux-gnu- \
-                          CROSS_COMPILE_ARM32=arm-linux-gnueabi- \
-                          AR=llvm-ar \
-                          OBJDUMP=llvm-objdump \
-                          STRIP=llvm-strip 2>&1 | tee error.log
-    cp out/arch/arm64/boot/Image.gz-dtb AnyKernel
-    python2 "libufdt/utils/src/mkdtboimg.py" \
-            create "out/arch/arm64/boot/dtbo.img" --page_size=4096 out/arch/arm64/boot/dts/qcom/*.dtbo
-    cp out/arch/arm64/boot/dtbo.img AnyKernel
-}
-
-# Zipping
-function zipping() {
-    cd AnyKernel || exit 1
-    zip -r9 surya-Stormbreaker-${TANGGAL}.zip *
-    cd ..
-}
-
-sticker
-sendinfo
-compile
-zipping
 END=$(date +"%s")
-DIFF=$(($END - $START))
-finerr
-push
+DIFF=$((END - START))
+
+if [ -f $(pwd)/out/arch/arm64/boot/Image.gz ]
+	then
+        if [ BUILD_DTBO = 1 ]
+        then
+		git clone --depth=1 https://android.googlesource.com/platform/system/libufdt libufdt
+                python2 "libufdt/utils/src/mkdtboimg.py" \
+					        create "out/arch/arm64/boot/dtbo.img" --page_size=4096 $(pwd)/out/arch/arm64/boot/dts/qcom/*.dtbo
+        fi
+# Post to CI channel
+curl -s -X POST https://api.telegram.org/bot${TOKEN}/sendMessage -d text="Branch: <code>$(git rev-parse --abbrev-ref HEAD)</code>
+Compiler Used : <code>GCC aka Giga Chad Compiler</code>
+Latest Commit: <code>$(git log --pretty=format:'%h : %s' -1)</code>
+<i>Build compiled successfully in $((DIFF / 60)) minute(s) and $((DIFF % 60)) seconds</i>" -d chat_id=${chat_id} -d parse_mode=HTML
+#curl -s -X POST https://api.telegram.org/bot${TOKEN}/sendMessage -d text="Flash now else bun" -d chat_id=${chat_id} -d parse_mode=HTML
+
+cp $(pwd)/out/arch/arm64/boot/Image.gz $(pwd)/AnyKernel3
+cp $(pwd)/out/arch/arm64/boot/dtb.img $(pwd)/AnyKernel3/dtb.img
+
+        if [ -f ${DTBO} ]
+        then
+                cp ${DTBO} $(pwd)/AnyKernel3
+        fi
+
+        cd AnyKernel3
+        make normal
+        ZIP_FINAL=$(echo *.zip)
+
+        if [ SIGN_BUILD = 1 ]
+        then
+                java -jar zipsigner-4.0.jar  StormBreaker-surya-${TANGGAL}.zip StormBreaker-surya-${TANGGAL}-signed.zip
+
+        curl -F chat_id="${chat_id}"  \
+                    -F caption="sha1sum: $(sha1sum Storm*-signed.zip | awk '{ print $1 }')" \
+                    -F document=@"$(pwd)/StormBreaker-surya-${TANGGAL}-signed.zip" \
+                    https://api.telegram.org/bot${TOKEN}/sendDocument
+
+
+        else
+
+        curl -F chat_id="${chat_id}"  \
+                    -F caption="sha1sum: $(sha1sum Storm*.zip | awk '{ print $1 }')" \
+                    -F document=@"$ZIP_FINAL" \
+                    https://api.telegram.org/bot${TOKEN}/sendDocument
+	fi
+
+    curl -s -X POST "https://api.telegram.org/bot$TOKEN/sendSticker" \
+        -d sticker="CAACAgUAAxkBAAJi017AAw5j25_B3m8IP-iy98ffcGHZAAJAAgACeV4XIusNfRHZD3hnGQQ" \
+        -d chat_id="$chat_id"
+cd ..
+else
+        curl -F chat_id="${chat_id}"  \
+                    -F caption="Build ended with an error, F in the chat plox" \
+                    -F document=@"build.log" \
+                    https://api.telegram.org/bot${TOKEN}/sendDocument
+
+        curl -s -X POST "https://api.telegram.org/bot$TOKEN/sendSticker" \
+        -d sticker="CAACAgUAAxkBAAK74mCvV3W62vmSIcqQo61RtBxEK0dVAALGAgACw2B4VehbCiKmZwTjHwQ" \
+        -d chat_id="$chat_id"
+
+fi
+
+if [[ -f ${IMAGE} &&  ${DTBO} ]]
+then
+   mv -f $IMAGE ${DTBO} AnyKernel3
+fi
