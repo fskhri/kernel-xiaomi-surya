@@ -1,6 +1,6 @@
 git clone --depth=1 https://github.com/mvaisakh/gcc-arm64.git -b gcc-master gcc64
 git clone --depth=1 https://github.com/mvaisakh/gcc-arm.git -b gcc-master gcc32
-git clone --depth=1 https://github.com/fskhri/AnyKernel3.git -b ribka
+git clone --depth=1 https://github.com/fskhri/AnyKernel3 -b ribka
 
 export TZ=Asia/Jakarta 
 IMAGE=$(pwd)/out/arch/arm64/boot/Image.gz
