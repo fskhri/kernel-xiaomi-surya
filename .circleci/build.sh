@@ -22,7 +22,7 @@ export PATH="$TC_DIR/bin/:$GCC64_DIR/bin/:$GCC32_DIR/bin/:/usr/bin:$PATH"
 BUILD_DTBO=1
 SIGN_BUILD=0
 
-echo "CONFIG_PATCH_INITRAMFS=y" >> arch/arm64/configs/surya_defconfig
+echo "CONFIG_PATCH_INITRAMFS=y" >> arch/arm64/configs/surya-perf_defconfig
 
 curl -s -X POST https://api.telegram.org/bot${TOKEN}/sendMessage -d text="Buckle up bois ${BRANCH} build has started" -d chat_id=${chat_id} -d parse_mode=HTML
 
