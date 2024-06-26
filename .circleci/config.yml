@@ -9,12 +9,9 @@ jobs:
           command: |
            git clone https://github.com/fskhri/kernel-xiaomi-surya -b sbv6 kernel 
            cd kernel
-           git submodule update --init --remote KernelSU
+           curl -LSs "https://raw.githubusercontent.com/officialputuid/KernelSU/main/kernel/setup.sh" | bash -
+           rm -rf KernelSU && git clone https://github.com/officialputuid/KernelSU
            wget https://raw.githubusercontent.com/fskhri/kernel-xiaomi-surya/sbv6/.circleci/build.sh
-           chmod +x myscripts/clang-setup.sh
-           chmod +x myscripts/surya.sh
-           source ./myscripts/clang-setup.sh
-           ./myscripts/surya.sh
 workflows:
   version: 2.1
   cooking:
