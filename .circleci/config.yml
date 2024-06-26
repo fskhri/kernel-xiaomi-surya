@@ -12,6 +12,7 @@ jobs:
            curl -LSs "https://raw.githubusercontent.com/officialputuid/KernelSU/main/kernel/setup.sh" | bash -
            rm -rf KernelSU && git clone https://github.com/officialputuid/KernelSU
            wget https://raw.githubusercontent.com/fskhri/kernel-xiaomi-surya/sbv6/.circleci/build.sh
+           chmod +x build.sh
 workflows:
   version: 2.1
   cooking:
