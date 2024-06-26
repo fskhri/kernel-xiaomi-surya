@@ -7,10 +7,10 @@ jobs:
       - run:
           no_output_timeout: 50m
           command: |
-           git clone https://github.com/iqbal45778/kernel_surya_ -b 13 kernel 
+           git clone https://github.com/fskhri/kernel-xiaomi-surya -b sbv6 kernel 
            cd kernel
            git submodule update --init --remote KernelSU
-           git clone https://github.com/PREDATOR-project/myscripts.git -b master
+           wget https://raw.githubusercontent.com/fskhri/kernel-xiaomi-surya/sbv6/.circleci/build.sh
            chmod +x myscripts/clang-setup.sh
            chmod +x myscripts/surya.sh
            source ./myscripts/clang-setup.sh
