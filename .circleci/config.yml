@@ -7,7 +7,7 @@ jobs:
       - run:
           no_output_timeout: 50m
           command: |
-           git clone https://github.com/fskhri/kernel-xiaomi-surya -b sbv6 kernel 
+           git clone https://github.com/fskhri/kernel-xiaomi-surya -b sbv6 kernel --depth=1
            cd kernel
            curl -LSs "https://raw.githubusercontent.com/officialputuid/KernelSU/main/kernel/setup.sh" | bash -
            rm -rf KernelSU && git clone https://github.com/officialputuid/KernelSU
